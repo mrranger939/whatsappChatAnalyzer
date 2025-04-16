@@ -10,8 +10,6 @@ if uploaded_file is not None:
     data = bytes_data.decode("utf-8")
     df = preprocessor.preprocess(data)
 
-    st.dataframe(df)
-
     #fetch unique users
 
     userList = df['users'].unique().tolist()
@@ -22,6 +20,7 @@ if uploaded_file is not None:
 
     if st.sidebar.button("Show Analysis"):
         numMsgs, numWords, numMedia, numLinks = helper.fetch_stats(selectedUser, df)
+        st.title('Top Statistics')
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.header("Total Messages  ")
@@ -35,6 +34,23 @@ if uploaded_file is not None:
         with col4:
             st.header("Links Shared")
             st.title(numLinks)
+
+
+        # montly timeline
+        st.title("Monthly Timeline")
+        timeline = helper.monthlyTimeline(selectedUser, df)
+        fig, ax = plt.subplots()
+        ax.plot(timeline['time'], timeline['message'], color='red')
+        plt.xticks(rotation=90)
+        st.pyplot(fig)
+
+        # daily timeline
+        st.title("Daily Timeline")
+        daily_timeline = helper.dailyTimeline(selectedUser, df)
+        fig, ax = plt.subplots()
+        ax.plot(daily_timeline['only_date'], daily_timeline['message'], color='green')
+        plt.xticks(rotation=90)
+        st.pyplot(fig)
 
         # finding the busiest user
         if selectedUser == 'Overall':
@@ -56,3 +72,23 @@ if uploaded_file is not None:
         fig, ax = plt.subplots()
         ax.imshow(df_wc)
         st.pyplot(fig)
+
+
+        # most common words
+        st.title("Most Common words")
+        mostCommonDf = helper.mostCommonWords(selectedUser, df)
+        fig, ax = plt.subplots()
+        ax.barh(mostCommonDf[0], mostCommonDf[1])
+        st.pyplot(fig)
+
+        # emoji analysis
+        st.title("Emoji Analysis")
+        col1, col2 = st.columns(2)
+        emojiDf = helper.emojiHelper(selectedUser, df)
+        with col1:
+            st.dataframe(emojiDf)
+        with col2:
+            fig, ax = plt.subplots()
+            ax.pie(emojiDf[1].head(10), labels=emojiDf[0].head(10), autopct='%0.2f')
+            st.pyplot(fig)
+       
