@@ -1,18 +1,31 @@
 import re
 import pandas as pd
 def preprocess(data):
-    pattern = r'\d{1,2}/\d{1,2}/\d{4},\s\d{1,2}:\d{2}\s(?:am|pm)\s-\s'      
-    messages = re.split(pattern, data)[1:]
+    pattern = r'\d{1,2}/\d{1,2}/\d{2,4},\s\d{1,2}:\d{2}\s(?:am|pm|AM|PM)\s-\s'     
+    messages = re.split(pattern, data, flags=re.IGNORECASE)[1:]
     dates = re.findall(pattern, data)
     dates_clean = []
     for timestamp in dates:
         clean_timestamp = timestamp.replace('\u202f', ' ')
         dates_clean.append(clean_timestamp)
-    dates_clean
-    df = pd.DataFrame({'user_message': messages, 'message_date': dates_clean})
-    df['datetime'] = pd.to_datetime(df['message_date'], format='%d/%m/%Y, %I:%M %p - ')
+    def parse_date(date_str):
+        try:
+            # Try MM/DD/YY format with the dash
+            return pd.to_datetime(date_str, format='%m/%d/%y, %I:%M %p - ')
+        except ValueError:
+            try:
+                # Try DD/MM/YYYY format with the dash
+                return pd.to_datetime(date_str, format='%d/%m/%Y, %I:%M %p - ')
+            except ValueError:
+                print(f"Failed to parse: {date_str}")
+                return pd.NaT
+
+    # Apply the parsing function
+    df = pd.DataFrame({'user_message': messages, 'message_date': dates})
+    df['date'] = df['message_date'].apply(parse_date)
+
+    # Drop the original message_date column
     df = df.drop(['message_date'], axis=1)
-    df.rename(columns={'datetime': 'date'}, inplace=True)
     users = []
     messages = []
     for message in df['user_message']:
