@@ -2,7 +2,8 @@ import streamlit as st
 import preprocessor, helper
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import seaborn as sns
+import plotly.express as px
 st.sidebar.title("Whatsapp Chat Analyzer")
 uploaded_file = st.sidebar.file_uploader("Choose a file: ")
 if uploaded_file is not None:
@@ -52,6 +53,24 @@ if uploaded_file is not None:
         plt.xticks(rotation=90)
         st.pyplot(fig)
 
+        # activity map
+
+        st.title("Activity Map")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.header('Most Busy Day')
+            busyDay = helper.weekActivityMap(selectedUser, df)
+            fig, ax = plt.subplots()
+            ax.bar(busyDay.index, busyDay.values)
+            plt.xticks(rotation=90)
+            st.pyplot(fig)
+        with col2:
+            st.header('Most Busy Month')
+            busyMonth = helper.monthActivityMap(selectedUser, df)
+            fig, ax = plt.subplots()
+            ax.bar(busyMonth.index, busyMonth.values, color='green')
+            plt.xticks(rotation=90)
+            st.pyplot(fig)
         # finding the busiest user
         if selectedUser == 'Overall':
             st.title("Most Busy Users")
@@ -88,7 +107,12 @@ if uploaded_file is not None:
         with col1:
             st.dataframe(emojiDf)
         with col2:
-            fig, ax = plt.subplots()
-            ax.pie(emojiDf[1].head(10), labels=emojiDf[0].head(10), autopct='%0.2f')
-            st.pyplot(fig)
+            fig = px.pie(emojiDf.head(10), values=1, names=0)
+            st.plotly_chart(fig)
+        
+        st.title("Weekly Activity Map")
+        userHeatMap = helper.dailyActivityMap(selectedUser, df)
+        fig, ax = plt.subplots()
+        ax = sns.heatmap(userHeatMap)
+        st.pyplot(fig)
        

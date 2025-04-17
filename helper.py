@@ -88,3 +88,18 @@ def dailyTimeline(selectedUser, df):
     daily_timeline = df.groupby('only_date').count()['message'].reset_index()
 
     return daily_timeline
+
+def weekActivityMap(selectedUser, df):
+    if selectedUser != 'Overall':
+        df = df[df['users'] == selectedUser]
+    return df['day_name'].value_counts()
+
+def monthActivityMap(selectedUser, df):
+    if selectedUser != 'Overall':
+        df = df[df['users'] == selectedUser]
+    return df['month'].value_counts()    
+
+def dailyActivityMap(selectedUser, df):
+    if selectedUser != 'Overall':
+        df = df[df['users'] == selectedUser]
+    return df.pivot_table(index='day_name', columns='period', values='message', aggfunc='count').fillna(0)
